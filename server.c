@@ -13,7 +13,7 @@
 #include <ctype.h>
 #include <libgen.h>
 
-int SendData(int fd, char* data, int len)
+int SendData(int fd, char *data, int len)
 {
     int sent = 0;
     int tmp = 0;
@@ -25,7 +25,7 @@ int SendData(int fd, char* data, int len)
     return sent;
 }
 
-int RecvData(int fd, char* data, int maxlen)
+int RecvData(int fd, char *data, int maxlen)
 {
     int received = 0;
     int blocksize = 1024;
@@ -42,42 +42,46 @@ void AppendString(char **dest, const char *src)
 {
     char *tmp_dest = *dest;
     int old_length = tmp_dest == NULL ? 0 : strlen(tmp_dest);
-    *dest = (char*)realloc(*dest, old_length+strlen(src)+1);
+    *dest = (char *)realloc(*dest, old_length + strlen(src) + 1);
     tmp_dest = *dest;
-    memset(tmp_dest+old_length, 0, strlen(src)+1);
-    sprintf(tmp_dest+old_length, "%s", src);
+    memset(tmp_dest + old_length, 0, strlen(src) + 1);
+    sprintf(tmp_dest + old_length, "%s", src);
 }
 
-void BoardCasProcess() {
+void BoardCasProcess()
+{
     int bfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
     struct sockaddr_in saddr;
     saddr.sin_addr.s_addr = inet_addr("255.255.255.255");
     saddr.sin_family = AF_INET;
     saddr.sin_port = htons(5001);
-    int on  = 1;
+    int on = 1;
     setsockopt(bfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
     while (1 == 1)
     {
         char hostBuffer[256];
         int host = gethostname(hostBuffer, sizeof(hostBuffer));
         struct hostent *hostEntry = gethostbyname(hostBuffer);
-        char *IPAddress = inet_ntoa(*((struct in_addr*)hostEntry->h_addr_list[0]));
+        char *IPAddress = inet_ntoa(*((struct in_addr *)hostEntry->h_addr_list[0]));
         char *mess = NULL;
         AppendString(&mess, "IPBoradcast ");
         AppendString(&mess, IPAddress);
-        int sent = sendto(bfd, mess, strlen(mess), 0, (struct sockaddr*)&saddr, sizeof(saddr));
+        int sent = sendto(bfd, mess, strlen(mess), 0, (struct sockaddr *)&saddr, sizeof(saddr));
         printf("%d %s\n", sent, mess);
         free(mess);
-        sleep(5);
+        sleep(1);
     }
     close(bfd);
 }
 
-int alphasort(const struct dirent **a, const struct dirent **b) {
-    if((*a)->d_type == DT_DIR && (*b)->d_type == DT_REG) {
+int alphasort(const struct dirent **a, const struct dirent **b)
+{
+    if ((*a)->d_type == DT_DIR && (*b)->d_type == DT_REG)
+    {
         return -1;
     }
-    if((*a)->d_type == (*b)->d_type) {
+    if ((*a)->d_type == (*b)->d_type)
+    {
         return 0;
     }
     return 1;
@@ -86,14 +90,15 @@ int alphasort(const struct dirent **a, const struct dirent **b) {
 void SendListFileToClient(int cfd)
 {
     char *path = NULL;
-    char _path[1024] = { 0 };
-    struct dirent** listFile = NULL;
+    char _path[1024] = {0};
+    struct dirent **listFile = NULL;
     getcwd(_path, 1024);
     AppendString(&path, _path);
     AppendString(&path, "/FileStorages/");
     int n = scandir(path, &listFile, NULL, alphasort);
     char *mess = NULL;
-    for(int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         if (listFile[i]->d_type == DT_REG)
         {
             AppendString(&mess, listFile[i]->d_name);
@@ -103,21 +108,21 @@ void SendListFileToClient(int cfd)
     SendData(cfd, mess, strlen(mess));
 }
 
-int AnalyisMessage(char* _mess) {
-    char mess[1024] = { 0 };
+int AnalyisMessage(char *_mess)
+{
+    char mess[1024] = {0};
     for (int i = 0; i < strlen(_mess) && _mess[i] != ' '; i++)
     {
         mess[i] = toupper(_mess[i]);
     }
-    
 
-    if(strncmp(mess, "UPLOAD", 6) == 0)
+    if (strncmp(mess, "UPLOAD", 6) == 0)
         return 1;
-    if(strncmp(mess, "DOWNLOAD", 8) == 0)
+    if (strncmp(mess, "DOWNLOAD", 8) == 0)
         return 2;
-    if(strncmp(mess, "LIST", 4) == 0)
+    if (strncmp(mess, "LIST", 4) == 0)
         return 3;
-    if(strncmp(mess, "DONE", 4) == 0)
+    if (strncmp(mess, "DONE", 4) == 0)
         return 4;
 
     return 0;
@@ -127,7 +132,7 @@ void HandleUpload(int cfd, char *filePathClient)
 {
     char *filePath = NULL;
     char *fileName = basename(filePathClient);
-    char path[1024] = { 0 };
+    char path[1024] = {0};
     getcwd(path, 1024);
     AppendString(&filePath, path);
     AppendString(&filePath, "/FileStorages/");
@@ -138,16 +143,18 @@ void HandleUpload(int cfd, char *filePathClient)
     {
         err = "File is existed!";
         SendData(cfd, err, strlen(err));
-    }else
+    }
+    else
     {
         FILE *f = fopen(filePath, "wb");
         int received = 0;
         char *data = NULL;
         do
         {
-            char buffer[1024] = { 0 };
+            char buffer[1024] = {0};
             received = RecvData(cfd, buffer, 1024);
-            if(AnalyisMessage(buffer) == 4) break;
+            if (AnalyisMessage(buffer) == 4)
+                break;
             AppendString(&data, buffer);
         } while (received > 0);
 
@@ -160,14 +167,14 @@ void HandleUpload(int cfd, char *filePathClient)
 void HandleDownload(int cfd, char *fileName)
 {
     char *filePath = NULL;
-    char path[1024] = { 0 };
+    char path[1024] = {0};
     getcwd(path, 1024);
     AppendString(&filePath, path);
     AppendString(&filePath, "/FileStorages/");
     AppendString(&filePath, fileName);
 
     FILE *f = fopen(filePath, "r");
-    if (f == NULL) 
+    if (f == NULL)
     {
         char *err = "File not found!";
         SendData(cfd, err, strlen(err));
@@ -178,7 +185,7 @@ void HandleDownload(int cfd, char *fileName)
     fseek(f, 0, SEEK_END);
     int fsize = ftell(f);
     fseek(f, 0, SEEK_SET);
-    char* data = (char*)calloc(fsize, 1);
+    char *data = (char *)calloc(fsize, 1);
     fread(data, 1, fsize, f);
     fclose(f);
     SendData(cfd, data, fsize);
@@ -190,92 +197,102 @@ void HandleProcess(int cfd)
 {
     while (1 == 1)
     {
-        char mess[1024] = { 0 };
+        char mess[1024] = {0};
         int received = RecvData(cfd, mess, 1024);
-        if(received > 0)
+        if (received > 0)
         {
             while (mess[strlen(mess) - 1] == '\n' || mess[strlen(mess) - 1] == '\r')
             {
                 mess[strlen(mess) - 1] = 0;
             }
-
+            printf("data receive from tcp connection:%s", mess);
             int cmd = AnalyisMessage(mess);
             char *fileName = NULL;
             fileName = strtok(mess, " ");
             fileName = strtok(NULL, " ");
             switch (cmd)
             {
-                case 1:
-                    if(fileName == NULL)
-                    {
-                        char *err = "File name required!";
-                        SendData(cfd, err, strlen(err));
-                    }else 
-                    {
-                        HandleUpload(cfd, fileName);
-                    }
-                    break;
-                case 2:
-                    if (fileName == NULL)
-                    {
-                        char *err = "File name required!";
-                        SendData(cfd, err, strlen(err));
-                    }else 
-                    {
-                        HandleDownload(cfd, fileName);
-                    }                    
-                    break;
-                case 3:
-                    SendListFileToClient(cfd);
-                    break;
+            case 1:
+                if (fileName == NULL)
+                {
+                    char *err = "File name required!";
+                    SendData(cfd, err, strlen(err));
+                }
+                else
+                {
+                    HandleUpload(cfd, fileName);
+                }
+                break;
+            case 2:
+                if (fileName == NULL)
+                {
+                    char *err = "File name required!";
+                    SendData(cfd, err, strlen(err));
+                }
+                else
+                {
+                    HandleDownload(cfd, fileName);
+                }
+                break;
+            case 3:
+                SendListFileToClient(cfd);
+                break;
 
-                default:
-                    SendData(cfd, "WRONG COMMAND", 13);
-                    break;
-            }            
+            default:
+                SendData(cfd, "WRONG COMMAND", 13);
+                break;
+            }
         }
     }
     close(cfd);
 }
 
-void ServerProcess() {
+void ServerProcess()
+{
     int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     struct sockaddr_in saddr, caddr;
     int clen = sizeof(caddr);
     saddr.sin_addr.s_addr = 0;
     saddr.sin_family = AF_INET;
     saddr.sin_port = htons(6001);
-    int err = bind(fd, (struct sockaddr*)&saddr, sizeof(saddr));
-    if(err == -1) 
+    int err = bind(fd, (struct sockaddr *)&saddr, sizeof(saddr));
+    if (err == -1)
     {
         printf("1: Error!\n");
         return;
     }
     err = listen(fd, 10);
-    if(err == -1)
+    if (err == -1)
     {
         printf("2: Error!\n");
     }
 
-    while (1 == 1)  
+    while (1 == 1)
     {
-        int cfd = accept(fd, (struct sockaddr*)&caddr, &clen);
-        if(fork() == 0)
+        int cfd = accept(fd, (struct sockaddr *)&caddr, &clen);
+        if (fork() == 0)
         {
             SendListFileToClient(cfd);
             HandleProcess(cfd);
         }
     }
-    close(fd);    
+    close(fd);
 }
 
-int main() {
-    if(fork() == 0) {
+int main()
+{
+    if (fork() == 0)
+    {
         BoardCasProcess();
-    }else {
-        if (fork() == 0) {
+    }
+    else
+    {
+        if (fork() == 0)
+        {
             ServerProcess();
-        }else {
+        }
+        else
+        {
             sleep(1000);
         }
     }
