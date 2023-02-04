@@ -1,5 +1,5 @@
-## Final Term
-# File server
+# Final Term
+## File server.c
 - File server will broadcast message in form:
     * IPBroadcast {IP address of computer server} {Name of computer server} {Port of process share file}
 - In process share file
