@@ -56,20 +56,26 @@ void BoardCasProcess() {
     saddr.sin_port = htons(5001);
     int on  = 1;
     setsockopt(bfd, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
+
+    char hostBuffer[256];
+    int host = gethostname(hostBuffer, sizeof(hostBuffer));
+    struct hostent *hostEntry = gethostbyname(hostBuffer);
+    char *IPAddress = inet_ntoa(*((struct in_addr*)hostEntry->h_addr_list[0]));
+    char *mess = NULL;
+    AppendString(&mess, "IPBroadcast ");
+    AppendString(&mess, IPAddress);
+    AppendString(&mess, " ");
+    AppendString(&mess, hostBuffer);
+    AppendString(&mess, " 6001");
+    
     while (1 == 1)
     {
-        char hostBuffer[256];
-        int host = gethostname(hostBuffer, sizeof(hostBuffer));
-        struct hostent *hostEntry = gethostbyname(hostBuffer);
-        char *IPAddress = inet_ntoa(*((struct in_addr*)hostEntry->h_addr_list[0]));
-        char *mess = NULL;
-        AppendString(&mess, "IPBoradcast ");
-        AppendString(&mess, IPAddress);
         int sent = sendto(bfd, mess, strlen(mess), 0, (struct sockaddr*)&saddr, sizeof(saddr));
-        printf("%d %s\n", sent, mess);
-        free(mess);
         sleep(5);
     }
+
+    free(mess);
+    mess = NULL;
     close(bfd);
 }
 
@@ -93,14 +99,20 @@ void SendListFileToClient(int cfd)
     AppendString(&path, "/FileStorages/");
     int n = scandir(path, &listFile, NULL, alphasort);
     char *mess = NULL;
-    for(int i = 0; i < n; i++) {
-        if (listFile[i]->d_type == DT_REG)
-        {
-            AppendString(&mess, listFile[i]->d_name);
-            AppendString(&mess, "\n");
+    if (n <= 2) {
+        AppendString(&mess, "Empty");
+    } else {
+        for(int i = 0; i < n; i++) {
+            if (listFile[i]->d_type == DT_REG)
+            {
+                AppendString(&mess, listFile[i]->d_name);
+                AppendString(&mess, "\n");
+            }
         }
     }
     SendData(cfd, mess, strlen(mess));
+    free(mess);
+    mess = NULL;
 }
 
 int AnalyisMessage(char* _mess) {
@@ -110,7 +122,6 @@ int AnalyisMessage(char* _mess) {
         mess[i] = toupper(_mess[i]);
     }
     
-
     if(strncmp(mess, "UPLOAD", 6) == 0)
         return 1;
     if(strncmp(mess, "DOWNLOAD", 8) == 0)
@@ -153,6 +164,7 @@ void HandleUpload(int cfd, char *filePathClient)
 
         fwrite(data, strlen(data), 1, f);
         free(data);
+        data = NULL;
         fclose(f);
     }
 }
@@ -184,6 +196,7 @@ void HandleDownload(int cfd, char *fileName)
     SendData(cfd, data, fsize);
     free(data);
     data = NULL;
+    SendData(cfd, "END", 3);
 }
 
 void HandleProcess(int cfd)
