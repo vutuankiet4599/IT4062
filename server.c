@@ -113,6 +113,7 @@ void SendListFileToClient(int cfd)
     SendData(cfd, mess, strlen(mess));
     free(mess);
     mess = NULL;
+    SendData(cfd, "END", 3);
 }
 
 int AnalyisMessage(char* _mess) {
