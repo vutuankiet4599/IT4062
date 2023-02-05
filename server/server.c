@@ -162,21 +162,17 @@ void HandleUpload(int cfd, char *filePathClient)
     }
     else
     {
-        FILE *f = fopen(filePath, "wb");
+        FILE *f = fopen(filePath, "ab");
         int received = 0;
-        char *data = NULL;
+        char buffer[1024] = {0};
         do
         {
-            char buffer[1024] = {0};
+            memset(buffer, 0, 1024);
             received = RecvData(cfd, buffer, 1024);
             if (AnalyisMessage(buffer) == 4)
                 break;
-            AppendString(&data, buffer);
+            fwrite(buffer, strlen(buffer), 1, f);
         } while (received > 0);
-
-        fwrite(data, strlen(data), 1, f);
-        free(data);
-        data = NULL;
         fclose(f);
     }
 }
@@ -189,8 +185,7 @@ void HandleDownload(int cfd, char *fileName)
     AppendString(&filePath, path);
     AppendString(&filePath, "/FileStorages/");
     AppendString(&filePath, fileName);
-
-    FILE *f = fopen(filePath, "r");
+    FILE *f = fopen(filePath, "rb");
     if (f == NULL)
     {
         char *err = "File not found!";
@@ -223,7 +218,6 @@ void HandleProcess(int cfd)
             {
                 mess[strlen(mess) - 1] = 0;
             }
-            printf("data receive from tcp connection:%s", mess);
             int cmd = AnalyisMessage(mess);
             char *fileName = NULL;
             fileName = strtok(mess, " ");
