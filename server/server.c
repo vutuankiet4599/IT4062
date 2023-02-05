@@ -100,7 +100,7 @@ void SendListFileToClient(int cfd)
     struct dirent **listFile = NULL;
     getcwd(_path, 1024);
     AppendString(&path, _path);
-    AppendString(&path, "/FileStorages/");
+    AppendString(&path, "../FileStorages/");
     int n = scandir(path, &listFile, NULL, alphasort);
     char *mess = NULL;
     if (n <= 2)
@@ -151,7 +151,7 @@ void HandleUpload(int cfd, char *filePathClient)
     char path[1024] = {0};
     getcwd(path, 1024);
     AppendString(&filePath, path);
-    AppendString(&filePath, "/FileStorages/");
+    AppendString(&filePath, "../FileStorages/");
     AppendString(&filePath, fileName);
     char *err = NULL;
 
@@ -186,7 +186,7 @@ void HandleDownload(int cfd, char *fileName)
     char path[1024] = {0};
     getcwd(path, 1024);
     AppendString(&filePath, path);
-    AppendString(&filePath, "/FileStorages/");
+    AppendString(&filePath, "../FileStorages/");
     AppendString(&filePath, fileName);
     FILE *f = fopen(filePath, "rb");
     if (f == NULL)

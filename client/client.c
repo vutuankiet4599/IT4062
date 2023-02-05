@@ -82,8 +82,7 @@ void listenFromPeer()
                 fprintf(f, "%d. %s %s\n", countClient, ack, inet_ntoa(caddr.sin_addr));
                 fclose(f);
                 // reset cho lan tiep theo
-                
-            }
+                        }
             checkClientExist = 0;
         }
     }
@@ -196,7 +195,7 @@ void download()
         }
         printf("%s\n", buffer);
         char filePath[1024];
-        sprintf(filePath, "./FileStorages/%s", filename);
+        sprintf(filePath, "../FileStorages/%s", filename);
         printf("%s", filePath);
         FILE *f = fopen(filePath, "wb");
         if (f != NULL)
@@ -220,7 +219,7 @@ void upload()
     scanf("%s", filename);
     sprintf(cmd, "upload %s", filename);
     send(cfd, cmd, strlen(cmd), 0);
-    sprintf(filePath, "./FileStorages/%s", filename);
+    sprintf(filePath, "../FileStorages/%s", filename);
     FILE *f = fopen(filePath, "rb");
     if (f != NULL)
     {
