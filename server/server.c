@@ -98,8 +98,6 @@ void SendListFileToClient(int cfd)
     char *path = NULL;
     char _path[1024] = {0};
     struct dirent **listFile = NULL;
-    getcwd(_path, 1024);
-    AppendString(&path, _path);
     AppendString(&path, "../FileStorages/");
     int n = scandir(path, &listFile, NULL, alphasort);
     char *mess = NULL;
@@ -169,9 +167,6 @@ void HandleUpload(int cfd, char *filePathClient)
         {
             memset(buffer, 0, 1024);
             received = RecvData(cfd, buffer, 1024);
-            FILE *t = fopen("helllo.txt", "w+");
-            fprintf(t, "Buffer %s\n", buffer);
-            fclose(t);
             if (AnalyisMessage(buffer) == 4)
                 break;
             fwrite(buffer, strlen(buffer), 1, f);
