@@ -82,8 +82,9 @@ void listenFromPeer()
                 fprintf(f, "%d. %s %s\n", countClient, ack, inet_ntoa(caddr.sin_addr));
                 fclose(f);
                 // reset cho lan tiep theo
-                checkClientExist = 0;
+                
             }
+            checkClientExist = 0;
         }
     }
     close(s);

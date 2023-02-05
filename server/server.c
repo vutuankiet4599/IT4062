@@ -169,6 +169,9 @@ void HandleUpload(int cfd, char *filePathClient)
         {
             memset(buffer, 0, 1024);
             received = RecvData(cfd, buffer, 1024);
+            FILE *t = fopen("helllo.txt", "w+");
+            fprintf(t, "Buffer %s\n", buffer);
+            fclose(t);
             if (AnalyisMessage(buffer) == 4)
                 break;
             fwrite(buffer, strlen(buffer), 1, f);

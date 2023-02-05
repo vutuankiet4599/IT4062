@@ -1,1 +1,2 @@
 1. IPBroadcast 127.0.1.1 elitebook 6001 10.70.19.123
+2. IPBroadcast 127.0.1.1 huylinh-X550CL 6001 10.70.111.202
